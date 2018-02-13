@@ -78,6 +78,7 @@ class TextDomainMapper(explanation.DomainMapper):
                    json.dumps(text), div_name, json.dumps(opacity))
         return ret
 
+from nltk.tokenize.punkt import PunktSentenceTokenizer
 
 class IndexedString(object):
     """String with various indexes."""
@@ -94,11 +95,11 @@ class IndexedString(object):
                  according to position.
         """
         self.raw = raw_string
-        self.as_list = re.split(r'(%s)|$' % split_expression, self.raw)
+        sentences_span = PunktSentenceTokenizer().span_tokenize(self.raw)
+        self.as_list = [self.raw[begin:end] for (begin, end) in sentences_span]
         self.as_np = np.array(self.as_list)
         non_word = re.compile(r'(%s)|$' % split_expression).match
-        self.string_start = np.hstack(
-            ([0], np.cumsum([len(x) for x in self.as_np[:-1]])))
+        self.string_start = np.array([begin for (begin, end) in sentences_span])
         vocab = {}
         self.inverse_vocab = []
         self.positions = []
